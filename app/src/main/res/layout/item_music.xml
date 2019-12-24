@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="10dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginTop="10dp"
+    app:contentPadding="10dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="1dp"
+    >//cardCornerRadius为角的弧度，elevation为深度
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/item_local_music_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:layout_centerVertical="true"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/item_local_music_song"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="歌名"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_toRightOf="@+id/item_local_music_num"
+            android:singleLine="true"
+            android:layout_marginLeft="20dp"
+            />
+        <TextView
+            android:id="@+id/item_local_music_singer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="歌手"
+            android:layout_below="@id/item_local_music_song"
+            android:layout_alignLeft="@id/item_local_music_song"
+            android:layout_marginTop="10dp"
+            android:textSize="14sp"
+            android:textColor="@color/colorItem"/>
+        <TextView
+            android:id="@+id/item_local_music_line"
+            android:layout_width="2dp"
+            android:layout_height="18dp"
+            android:textColor="@color/colorItem"
+            android:text="|"
+            android:textStyle="bold"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toRightOf="@id/item_local_music_singer"
+            android:layout_alignTop="@id/item_local_music_singer"/>
+        <TextView
+            android:id="@+id/item_local_music_album"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="专辑名称"
+            android:layout_toRightOf="@id/item_local_music_line"
+            android:layout_alignTop="@id/item_local_music_singer"
+            android:textColor="@color/colorItem"
+            android:singleLine="true"
+            android:ellipsize="end"/>
+        //当文字长度超过textview宽度时的显示方式
+        //android:ellipsize=”end”——省略号显示在结尾  "encyc..."
+        <TextView
+            android:id="@+id/item_local_music_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/item_local_music_singer"
+            android:layout_alignParentRight="true"
+            android:text="04:30"
+            android:textSize="14sp"
+            android:textColor="@color/colorItem"/>
+
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
