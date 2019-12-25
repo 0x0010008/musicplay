@@ -1,5 +1,6 @@
 package com.example.musicplay;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -13,12 +14,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.example.musicplay.memoryPool.*;
 
 public class ListActivity extends AppCompatActivity {
     RecyclerView musicRv;
     //数据源
     List<music> mDatas;
+    String directory;
     private LocalMusicListAdapter adapter;
+    //记录当前播放对象
+    private music curmusic=null;
+    //记录当前正在播放的位置
+    int curposition=-1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,15 +42,42 @@ public class ListActivity extends AppCompatActivity {
             }
         });
         initView();
+        mDatas=loadLocalmusic(directory);//需要扫描方法
+        ListDirectory.setMdatas(mDatas);//放入静态库
         //创建适配器对象
         adapter=new LocalMusicListAdapter(this,mDatas);
         musicRv.setAdapter(adapter);
         //设置布局管理器，规定最终展示的形式，因为Recycle可以展示很多种形式，在这里选择ListView形式
         LinearLayoutManager linearLayoutManager=new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);//垂直向下，不反转正着来
         musicRv.setLayoutManager(linearLayoutManager);
+        adapter.notifyDataSetChanged();//提示适配器更新
+        //设置每一项的监听事件
+        setEventListener();
+    }
 
+    private void setEventListener() {
+        /*设置每一项的点击事件*/
+        adapter.setOnItemClickListener(new LocalMusicListAdapter.OnItemClickListener() {
+            @Override
+            public void OnItemClick(View view, int position) {
+                if(curposition!=-1&&curmusic!=null){
+                    //当前播放对象停止播放音乐  curposition=-1而注意curmusic没有为空的情况 在考虑
+                    curmusic.musihandler.stopplay();
+                    curposition=-1;
+                    curmusic=null;
+                }else {
+                    curposition = position;
+                    curmusic = mDatas.get(position);
+                    curmusic.musicHandler.startplay();//开始播放音乐
+                    ListDirectory.setPosition(curposition);//往交换区放入播放位置
+                    Intent intent=new Intent(ListActivity.this,PlayActivity.class);//跳转
+                    startActivity(intent);
+                }
+            }
+        });//调用传递过来的接口
 
     }
+
     private void initView(){
         /*初始化控件的函数*/
         musicRv.findViewById(R.id.local_music_rv);
