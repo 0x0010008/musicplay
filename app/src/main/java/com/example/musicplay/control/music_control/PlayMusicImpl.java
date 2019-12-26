@@ -33,10 +33,10 @@ public class PlayMusicImpl implements PlayMusic {
             public void SYNCPROC(int handle, int channel, int data, Object user) {
                 try {
                     BASS.BASS_ChannelRemoveSync(channel,handle);
-                    if(user!=null)((PlayToEnd)user).playToEndFunc();
                     BASS.BASS_StreamFree(handle);
                     if(MusicListData.getMusicList().moveToNext())
                     {
+                        if(user!=null)((PlayToEnd)user).playToEndFunc();
                         loadToRam(MusicListData.getMusicList().getMusic());
                         play(MusicListData.getMusicList().getMusic(),(PlayToEnd)user);
                     }

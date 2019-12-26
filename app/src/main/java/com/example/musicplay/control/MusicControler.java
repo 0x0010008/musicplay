@@ -10,6 +10,10 @@ public class MusicControler {
     private static PlayMusic playMusic=new PlayMusicImpl();
     private static PlayToEnd playToEnd;
 
+    /**
+     * 设置回调函数
+     * @param callBack
+     */
     public static void setCallBack(PlayToEnd callBack)
     {
         playToEnd=callBack;
