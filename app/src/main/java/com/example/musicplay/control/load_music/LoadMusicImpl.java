@@ -18,7 +18,7 @@ import java.io.File;
 
 public class LoadMusicImpl implements LoadMusic {
     @Override
-    public Music loadMusic(File file) throws MusicPlayException{
+    public Music musicFactory(File file) throws MusicPlayException{
         Music music=new Music(file);
         try {
             MusicInfo info=new MusicInfo();
