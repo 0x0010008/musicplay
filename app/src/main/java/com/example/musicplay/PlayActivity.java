@@ -14,6 +14,7 @@ import com.example.musicplay.control.MusicControler;
 import com.example.musicplay.control.MusicPlayException;
 import com.example.musicplay.control.MusicStatue;
 import com.example.musicplay.control.ToolCase;
+import com.example.musicplay.control.music_control.PlayToEnd;
 import com.example.musicplay.data.MusicListData;
 import com.example.musicplay.models.LoopStatue;
 import com.example.musicplay.models.Music;
@@ -31,6 +32,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private int curposition;//现在在正在播放时间的位置
     private Music curmusic;//现在正在播放的对象
     private MusicStatue curStatue;//记录歌曲现在的播放情况
+//    private LoopStatue curLoopStatue;//记录当前循环状态
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +47,23 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
             MyToast(e.getMessage());
         }
         loadMusic();//加载页面
+        MusicControler.setCallBack(new PlayToEnd() {//当当前曲子结束后重新加载页面
+            @Override
+            public void playToEndFunc() {
+                loadMusic();
+            }
+        });
     }
     /*得到对象和当前播放时间后加载页面*/
     private void loadMusic() {
+
         songName.setText(curmusic.getMusicInfo().getSongName());
         singer.setText(curmusic.getMusicInfo().getAuthor());
         album.setImageBitmap(curmusic.getMusicInfo().getImage());//得到当前专辑图片
         firstTime.setText(ToolCase.parseSecToTimeStr(curposition));//设置当前播放时间
         lastTime.setText(ToolCase.parseSecToTimeStr(curmusic.getMusicInfo().getLength()));//设置音乐总共时长
         songProgressBar.setMax(curmusic.getMusicInfo().getLength());
+
     }
 
     private void initView(){
@@ -74,6 +84,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         listBack.setOnClickListener(this);
         repeatMode.setOnClickListener(this);
         songProgressBar.setOnSeekBarChangeListener(new MySeekBar());
+        ModeChange();
     }
 
     @Override
@@ -158,6 +169,8 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private void playBefore(){
         try {
             MusicControler.playPrevious();
+            curmusic=MusicListData.getMusicList().getMusic();
+            loadMusic();
         } catch (MusicPlayException e) {
             MyToast(e.getMessage());
         }
@@ -165,6 +178,8 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private void playNext(){
         try {
             MusicControler.playNext();
+            curmusic=MusicListData.getMusicList().getMusic();
+            loadMusic();
         } catch (MusicPlayException e) {
             MyToast(e.getMessage());
         }
