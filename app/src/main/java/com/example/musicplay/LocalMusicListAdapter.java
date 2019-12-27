@@ -9,8 +9,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicplay.control.ToolCase;
 import com.example.musicplay.models.Music;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAdapter.LocalMusicListViewHolder> {
@@ -47,12 +50,11 @@ public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAd
     public void onBindViewHolder(@NonNull LocalMusicListViewHolder holder, final int position) {
         Music musicBean=mDatas.get(position);
 //        holder.num.setText(musicBean.getMusicInfo().);
-        holder.songName.setText(musicBean.getMusicInfo().getAuthor());
+        holder.songName.setText(musicBean.getMusicInfo().getSongName());
         holder.singer.setText(musicBean.getMusicInfo().getAuthor());
         holder.album.setText(musicBean.getMusicInfo().getAlbum());
-        holder.time.setText(musicBean.getMusicInfo().getLength());
-
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
+        holder.time.setText(ToolCase.parseSecToTimeStr(musicBean.getMusicInfo().getLength()));
+        if(onItemClickListener!=null)holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onItemClickListener.OnItemClick(v,position);  //接口回调
@@ -61,13 +63,16 @@ public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAd
         });
     }
 
+
+
+
     @Override
     public int getItemCount() {
         return mDatas.size();
     }
 
     class LocalMusicListViewHolder extends RecyclerView.ViewHolder{
-        TextView num,songName,singer,album,time;
+        TextView songName,singer,album,time;
         public LocalMusicListViewHolder(@NonNull View itemView) {
             super(itemView);
 //            num=itemView.findViewById(R.id.item_local_music_num);

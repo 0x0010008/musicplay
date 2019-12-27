@@ -19,10 +19,12 @@ public class PlayMusicImpl implements PlayMusic {
 
     @Override
     public void stop(Music music) throws MusicPlayException {
-        checkMusicHandler(music);
-        BASS.BASS_ChannelRemoveSync(music.getMusicHandler(),SynHandler);
-        if(!BASS.BASS_ChannelStop(music.getMusicHandler()))throw new MusicPlayException("停止失败");
-        destroy(music);
+        if(music!=null&&music.getMusicHandler()!=0) {
+            BASS.BASS_ChannelRemoveSync(music.getMusicHandler(), SynHandler);
+            if (!BASS.BASS_ChannelStop(music.getMusicHandler()))
+                throw new MusicPlayException("停止失败");
+            destroy(music);
+        }
     }
 
     @Override

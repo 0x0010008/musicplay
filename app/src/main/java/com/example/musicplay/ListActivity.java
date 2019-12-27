@@ -1,6 +1,8 @@
 package com.example.musicplay;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.example.musicplay.control.MusicControler;
@@ -16,6 +18,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Environment;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +26,8 @@ import android.widget.Toast;
 
 import com.example.musicplay.models.*;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListActivity extends AppCompatActivity {
@@ -36,6 +41,7 @@ public class ListActivity extends AppCompatActivity {
     private Music curmusic=null;
     //记录当前正在播放的位置
     int curposition=-1;
+    List<File> fileList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +71,45 @@ public class ListActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();//提示适配器更新
         //设置每一项的监听事件
         setEventListener();
+    }
+
+    private List<Music> syncMusicList()
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
+        File scanPath = Environment.getExternalStorageDirectory();
+        if(fileList==null)fileList=new ArrayList<>();
+        else if(fileList.size()>0)fileList.clear();
+        List<Music> musicList=new ArrayList<>();
+        try {
+            List<File> files=getFileList(scanPath);
+            for(File file :files)
+            {
+                musicList.add((new LoadMusicImpl()).musicFactory(file));
+            }
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
+        return musicList;
+    }
+
+    private List<File> getFileList(File dir) {
+        File[] files = dir.listFiles(); // 该文件目录下文件全部放入数组
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].getName();
+                if (files[i].isDirectory()) { // 判断是文件还是文件夹
+                    getFileList(files[i]); // 获取文件绝对路径
+                } else if (fileName.endsWith("mp3")||fileName.endsWith("flac")||fileName.endsWith("wav")) { // 判断文件是否是音乐
+                    String strFileName = files[i].getAbsolutePath();
+                    fileList.add(files[i]);
+                } else {
+                    continue;
+                }
+            }
+
+        }
+        return fileList;
     }
 
     private void setEventListener() {
