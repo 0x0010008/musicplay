@@ -195,7 +195,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 timer.cancel();
             }
             MusicControler.playPrevious();
-            //curmusic=MusicListData.getMusicList().getMusic();
+            start.setImageResource(R.drawable.ic_action_pause);
             loadMusic();
             StartProgress();
         } catch (MusicPlayException e) {
@@ -209,7 +209,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 timer.cancel();
             }
             MusicControler.playNext();
-            //curmusic=MusicListData.getMusicList().getMusic();
+            start.setImageResource(R.drawable.ic_action_pause);
             loadMusic();
             StartProgress();
         } catch (MusicPlayException e) {
@@ -236,7 +236,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void run() {
                         try {
-                            if(false)curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
+                            curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
                             if(!isSeekBarChanging){
                                 songProgressBar.setProgress(curposition);
                                 firstTime.setText(ToolCase.parseSecToTimeStr(curposition));
@@ -250,4 +250,6 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         };
         timer.schedule(timerTask,1000);
     }
+
+
 }
