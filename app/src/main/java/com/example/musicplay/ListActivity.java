@@ -67,6 +67,8 @@ public class ListActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mDatas=syncMusicList();
                 MusicListData.setMusicList(new MusicListCursorImpl(mDatas));
+                adapter=new LocalMusicListAdapter(context,mDatas);
+                adapter.notifyDataSetChanged();
             }
         });
         mDatas=syncMusicList();

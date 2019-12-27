@@ -217,8 +217,6 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
     private void ListBack(){
-        Intent intent=new Intent(PlayActivity.this,ListActivity.class);
-        startActivity(intent);
         this.finish();
     }
 
@@ -236,7 +234,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void run() {
                         try {
-                            curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
+                            curposition=Integer.parseInt((int)MusicControler.getNowPos()+"");//得到当前播放的时间位置
                             if(!isSeekBarChanging){
                                 songProgressBar.setProgress(curposition);
                                 firstTime.setText(ToolCase.parseSecToTimeStr(curposition));
@@ -248,8 +246,6 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 });
             }
         };
-        timer.schedule(timerTask,1000);
+        timer.schedule(timerTask,0,1000);
     }
-
-
 }
