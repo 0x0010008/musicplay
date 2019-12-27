@@ -21,13 +21,14 @@ import com.example.musicplay.models.Music;
 
 import java.util.ArrayList;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class PlayActivity extends AppCompatActivity implements View.OnClickListener {
     TextView songName,singer,firstTime,lastTime;
     ImageView album,before,start,next,listBack,repeatMode;
     SeekBar songProgressBar;
     private boolean isSeekBarChanging;//互斥变量，防止进度条与定时器冲突。
-    private int currentProgress;//当前音乐播放的进度
+    private int pauseposition=0;//当前音乐播放的进度
     private Timer timer;
     private int curposition;//现在在正在播放时间的位置
     private Music curmusic;//现在正在播放的对象
@@ -39,20 +40,9 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         initView();//初始化
-        try {
-            curmusic=MusicListData.getMusicList().getMusic();
-            if(false)curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
-            curposition=0;
-        } catch (MusicPlayException e) {
-            MyToast(e.getMessage());
-        }
+        curmusic=MusicListData.getMusicList().getMusic();
         loadMusic();//加载页面
-        MusicControler.setCallBack(new PlayToEnd() {//当当前曲子结束后重新加载页面
-            @Override
-            public void playToEndFunc() {
-                loadMusic();
-            }
-        });
+
     }
     /*得到对象和当前播放时间后加载页面*/
     private void loadMusic() {
@@ -63,7 +53,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         firstTime.setText(ToolCase.parseSecToTimeStr(curposition));//设置当前播放时间
         lastTime.setText(ToolCase.parseSecToTimeStr(curmusic.getMusicInfo().getLength()));//设置音乐总共时长
         songProgressBar.setMax(curmusic.getMusicInfo().getLength());
-
+        StartProgress();
     }
 
     private void initView(){
@@ -125,7 +115,11 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             isSeekBarChanging = false;
-//            curmusic.toposition(songProgressBar.getProgress());//音乐跳到对应的位置
+            try {
+                MusicControler.jumpToPos(songProgressBar.getProgress());//音乐跳到对应的位置
+            } catch (MusicPlayException e) {
+                MyToast(e.getMessage());
+            }
         }
     }
     private void MyToast(String error){
@@ -151,16 +145,17 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         if (curStatue== MusicStatue.playing){
             try {
                 MusicControler.pause();
+                pauseposition=curposition;
+                timer.cancel();
                 start.setImageResource(R.drawable.ic_action_start);
-                //进度条和firstTime的变化
             } catch (MusicPlayException e) {
                 MyToast(e.getMessage());
             }
         }else if (curStatue==MusicStatue.pause){
             try {
                 MusicControler.play();
+                StartProgress();
                 start.setImageResource(R.drawable.ic_action_pause);
-                //进度条和first的变化
             } catch (MusicPlayException e) {
                 MyToast(e.getMessage());
             }
@@ -168,18 +163,28 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void playBefore(){
         try {
+            if(timer!=null)
+            {
+                timer.cancel();
+            }
             MusicControler.playPrevious();
             curmusic=MusicListData.getMusicList().getMusic();
             loadMusic();
+            StartProgress();
         } catch (MusicPlayException e) {
             MyToast(e.getMessage());
         }
     }
     private void playNext(){
         try {
+            if(timer!=null)
+            {
+                timer.cancel();
+            }
             MusicControler.playNext();
             curmusic=MusicListData.getMusicList().getMusic();
             loadMusic();
+            StartProgress();
         } catch (MusicPlayException e) {
             MyToast(e.getMessage());
         }
@@ -187,5 +192,28 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private void ListBack(){
         Intent intent=new Intent(PlayActivity.this,ListActivity.class);
         startActivity(intent);
+    }
+    private void StartProgress(){
+        timer = new Timer();
+        TimerTask timerTask = new TimerTask(){
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if(false)curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
+                            if(!isSeekBarChanging){
+                                songProgressBar.setProgress(curposition);
+                                firstTime.setText(ToolCase.parseSecToTimeStr(curposition));
+                            }
+                        } catch (MusicPlayException e) {
+                            MyToast(e.getMessage());
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(timerTask,1000);
     }
 }
