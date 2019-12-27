@@ -14,6 +14,7 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
 import java.io.File;
+import java.lang.reflect.Field;
 
 
 public class LoadMusicImpl implements LoadMusic {
@@ -27,10 +28,13 @@ public class LoadMusicImpl implements LoadMusic {
             AudioHeader header= f.getAudioHeader();
             if(!tag.isEmpty()) {
                 Artwork artwork = tag.getFirstArtwork();
-                if (artwork != null)
-                    info.setImage(BitmapFactory.decodeByteArray(artwork.getBinaryData(), 0, artwork.getBinaryData().length));
-                info.setAuthor(tag.getFirst(FieldKey.ARTIST));
-                info.setAlbum(tag.getFirst(FieldKey.ALBUM));
+                if (artwork != null) info.setImage(BitmapFactory.decodeByteArray(artwork.getBinaryData(), 0, artwork.getBinaryData().length));
+                if(tag.getFirst(FieldKey.TITLE)!=null||tag.getFirst(FieldKey.TITLE).equals(""))info.setSongName(tag.getFirst(FieldKey.TITLE));
+                else info.setSongName(file.getName());
+                if(tag.getFirst(FieldKey.ARTIST)==null||tag.getFirst(FieldKey.ARTIST).equals(""))info.setAuthor(tag.getFirst(FieldKey.ARTIST));
+                else info.setAuthor("未知艺术家");
+                if(tag.getFirst(FieldKey.ALBUM)!=null||tag.getFirst(FieldKey.ALBUM).equals(""))info.setAlbum(tag.getFirst(FieldKey.ALBUM));
+                else info.setAuthor("未知专辑");
             }
             info.setLength(header.getTrackLength());
             music.setMusicInfo(info);

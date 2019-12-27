@@ -3,6 +3,7 @@ package com.example.musicplay.models;
 import android.graphics.Bitmap;
 
 public class MusicInfo {
+    private String songName;//歌名
     private String author;//作者
     private String album;//专辑
     private int length;//曲长
@@ -16,6 +17,14 @@ public class MusicInfo {
     }
 
     public MusicInfo() {
+    }
+
+    public String getSongName() {
+        return songName;
+    }
+
+    public void setSongName(String songName) {
+        this.songName = songName;
     }
 
     public String getAuthor() {

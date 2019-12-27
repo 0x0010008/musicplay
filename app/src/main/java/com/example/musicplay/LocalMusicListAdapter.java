@@ -9,11 +9,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicplay.models.Music;
+
 import java.util.List;
 
 public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAdapter.LocalMusicListViewHolder> {
     Context context;
-    List<music> mDatas;
+    List<Music> mDatas;
     OnItemClickListener onItemClickListener;
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener){ //传递接口给activity
@@ -24,7 +26,7 @@ public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAd
         public void OnItemClick(View view,int position);
     }
 
-    public LocalMusicListAdapter(Context context, List<music> mDatas) {
+    public LocalMusicListAdapter(Context context, List<Music> mDatas) {
         this.context = context;
         this.mDatas = mDatas;
     }
@@ -43,12 +45,12 @@ public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAd
      */
     @Override
     public void onBindViewHolder(@NonNull LocalMusicListViewHolder holder, final int position) {
-        music musicBean=mDatas.get(position);
-        holder.num.setText(musicBean.getnum);
-        holder.songName.setText(musicBean.getname);
-        holder.singer.setText(musicBean.getsinger);
-        holder.album.setText(musicBean.getalbum);
-        holder.time.setText(musicBean.gettime);
+        Music musicBean=mDatas.get(position);
+//        holder.num.setText(musicBean.getMusicInfo().);
+        holder.songName.setText(musicBean.getMusicInfo().getAuthor());
+        holder.singer.setText(musicBean.getMusicInfo().getAuthor());
+        holder.album.setText(musicBean.getMusicInfo().getAlbum());
+        holder.time.setText(musicBean.getMusicInfo().getLength());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,7 +70,7 @@ public class LocalMusicListAdapter extends RecyclerView.Adapter<LocalMusicListAd
         TextView num,songName,singer,album,time;
         public LocalMusicListViewHolder(@NonNull View itemView) {
             super(itemView);
-            num=itemView.findViewById(R.id.item_local_music_num);
+//            num=itemView.findViewById(R.id.item_local_music_num);
             songName=itemView.findViewById(R.id.item_local_music_song);
             singer=itemView.findViewById(R.id.item_local_music_singer);
             album=itemView.findViewById(R.id.item_local_music_album);

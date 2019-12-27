@@ -8,8 +8,14 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.musicplay.memoryPool.ListDirectory;
+import com.example.musicplay.control.MusicControler;
+import com.example.musicplay.control.MusicPlayException;
+import com.example.musicplay.control.MusicStatue;
+import com.example.musicplay.data.MusicListData;
+import com.example.musicplay.models.LoopStatue;
+import com.example.musicplay.models.Music;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -21,46 +27,45 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isSeekBarChanging;//互斥变量，防止进度条与定时器冲突。
     private int currentProgress;//当前音乐播放的进度
     private Timer timer;
-    private int position;//传过来的在列表中的位置
     private int curposition;//现在在正在播放时间的位置
-    private music curmusic;//现在正在播放的对象
-    private List<music> mdatas;//拿到的列表
-    private int mode=0;//记录歌曲循环模式 当mode=0时为列表循环（默认），当mode=1时为单曲循环
+    private Music curmusic;//现在正在播放的对象
+    private MusicStatue curStatue;//记录歌曲现在的播放情况
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         initView();//初始化
-        mdatas= ListDirectory.getMdatas();//得到列表
-//        mdatas=new ArrayList<>();//实例化列表
-        position=ListDirectory.getPosition();//得到在列表中的位置
-        curmusic=mdatas.get(position);//根据位置得到对象   请大佬改进这个方法
-        curposition=curmusic.getmusictime();//得到当前播放的时间位置
+        try {
+            curmusic=MusicListData.getMusicList().getMusic();
+            curposition=Integer.parseInt(MusicControler.getNowPos()+"");//得到当前播放的时间位置
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
         loadMusic();//加载页面
     }
     /*得到对象和当前播放时间后加载页面*/
     private void loadMusic() {
-        songName.setText(curmusic.getName());
-        singer.setText(curmusic.getsinger());
-        album.setImageResource(curmusic.getpicture);//得到当前专辑图片
+        songName.setText(curmusic.getMusicInfo().getSongName());
+        singer.setText(curmusic.getMusicInfo().getAuthor());
+        album.setImageBitmap(curmusic.getMusicInfo().getImage());//得到当前专辑图片
         firstTime.setText(curposition);//设置当前播放时间
-        lastTime.setText(curmusic.getdurtime());//设置音乐总共时长
-        songProgressBar.setMax(curmusic.getdurtime());
+        lastTime.setText(curmusic.getMusicInfo().getLength());//设置音乐总共时长
+        songProgressBar.setMax(curmusic.getMusicInfo().getLength());
     }
 
     private void initView(){
-        songName.findViewById(R.id.play_local_music_song_name);
-        singer.findViewById(R.id.play_local_music_singer);
-        firstTime.findViewById(R.id.play_local_music_firstTime);
-        lastTime.findViewById(R.id.play_local_music_lastTime);
-        album.findViewById(R.id.play_local_music_album_picture);
-        before.findViewById(R.id.play_local_music_before);
-        start.findViewById(R.id.play_local_music_start);
-        next.findViewById(R.id.play_local_music_next);
-        listBack.findViewById(R.id.play_local_music_list_back);
-        repeatMode.findViewById(R.id.play_local_music_repeat_mode);
-        songProgressBar.findViewById(R.id.play_local_music_song_seekBar);
+        songName=findViewById(R.id.play_local_music_song_name);
+        singer=findViewById(R.id.play_local_music_singer);
+        firstTime=findViewById(R.id.play_local_music_firstTime);
+        lastTime=findViewById(R.id.play_local_music_lastTime);
+        album=findViewById(R.id.play_local_music_album_picture);
+        before=findViewById(R.id.play_local_music_before);
+        start=findViewById(R.id.play_local_music_start);
+        next=findViewById(R.id.play_local_music_next);
+        listBack=findViewById(R.id.play_local_music_list_back);
+        repeatMode=findViewById(R.id.play_local_music_repeat_mode);
+        songProgressBar=findViewById(R.id.play_local_music_song_seekBar);
         before.setOnClickListener(this);
         start.setOnClickListener(this);
         next.setOnClickListener(this);
@@ -73,27 +78,23 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.play_local_music_before:
-
+                playBefore();
                 break;
             case R.id.play_local_music_start:
-                playMusic();
+                action_start_stop();
                 break;
             case R.id.play_local_music_next:
-
+                playNext();
                 break;
             case R.id.play_local_music_repeat_mode:
-
+                ModeChange();
                 break;
-            case  R.id.play_local_music_list_back:
-
+            case R.id.play_local_music_list_back:
+                ListBack();
                 break;
         }
 
 
-    }
-    /*播放音乐的函数*/
-    private void playMusic() {
-        if()
     }
 
     public class MySeekBar implements SeekBar.OnSeekBarChangeListener {
@@ -111,7 +112,63 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             isSeekBarChanging = false;
-            curmusic.toposition(songProgressBar.getProgress());//音乐跳到对应的位置
+//            curmusic.toposition(songProgressBar.getProgress());//音乐跳到对应的位置
         }
+    }
+    private void MyToast(String error){
+        Toast.makeText(getApplicationContext(),error,Toast.LENGTH_SHORT).show();
+    }
+    private void ModeChange(){
+        if( MusicListData.getMusicList().getLoopStatue()==LoopStatue.loop)
+        {MusicListData.getMusicList().setLoopStatue(LoopStatue.singleloop);
+        repeatMode.setImageResource(R.drawable.ic_action_repeat_one);}
+        else if(MusicListData.getMusicList().getLoopStatue()==LoopStatue.singleloop)
+        {MusicListData.getMusicList().setLoopStatue(LoopStatue.looprandom);
+        repeatMode.setImageResource(R.drawable.ic_action_random);}
+        else if(MusicListData.getMusicList().getLoopStatue()==LoopStatue.looprandom)
+        {MusicListData.getMusicList().setLoopStatue(LoopStatue.loop);
+        repeatMode.setImageResource(R.drawable.ic_action_list_cycle);}
+    }
+    private void action_start_stop(){
+        try {
+            curStatue=MusicControler.getMusicStatue();
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
+        if (curStatue== MusicStatue.playing){
+            try {
+                MusicControler.pause();
+                start.setImageResource(R.drawable.ic_action_start);
+                //进度条和firstTime的变化
+            } catch (MusicPlayException e) {
+                MyToast(e.getMessage());
+            }
+        }else if (curStatue==MusicStatue.pause){
+            try {
+                MusicControler.play();
+                start.setImageResource(R.drawable.ic_action_pause);
+                //进度条和first的变化
+            } catch (MusicPlayException e) {
+                MyToast(e.getMessage());
+            }
+        }
+    }
+    private void playBefore(){
+        try {
+            MusicControler.playPrevious();
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
+    }
+    private void playNext(){
+        try {
+            MusicControler.playNext();
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
+    }
+    private void ListBack(){
+        Intent intent=new Intent(PlayActivity.this,ListActivity.class);
+        startActivity(intent);
     }
 }

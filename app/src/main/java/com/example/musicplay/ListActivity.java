@@ -3,6 +3,11 @@ package com.example.musicplay;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.example.musicplay.control.MusicControler;
+import com.example.musicplay.control.MusicPlayException;
+import com.example.musicplay.control.load_music.LoadMusicImpl;
+import com.example.musicplay.data.MusicCursor;
+import com.example.musicplay.data.MusicListData;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -14,36 +19,43 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import com.example.musicplay.memoryPool.*;
+import android.widget.Toast;
+
+import com.example.musicplay.models.*;
+
+import java.util.List;
 
 public class ListActivity extends AppCompatActivity {
     RecyclerView musicRv;
+    FloatingActionButton scanfab;
     //数据源
-    List<music> mDatas;
+    List<Music> mDatas;
     String directory;
     private LocalMusicListAdapter adapter;
     //记录当前播放对象
-    private music curmusic=null;
+    private Music curmusic=null;
     //记录当前正在播放的位置
     int curposition=-1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        musicRv=findViewById(R.id.local_music_rv);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton scanfab = findViewById(R.id.scanfab);
+        initBass();//初始化音乐Bass库
+        scanfab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                mDatas=syncMusicList();
+                MusicListData.setMusicList(new MusicListCursorImpl(mDatas));
             }
         });
-        initView();
-        mDatas=loadLocalmusic(directory);//需要扫描方法
-        ListDirectory.setMdatas(mDatas);//放入静态库
+        mDatas=syncMusicList();
+
+        MusicListData.setMusicList(new MusicListCursorImpl(mDatas));
         //创建适配器对象
         adapter=new LocalMusicListAdapter(this,mDatas);
         musicRv.setAdapter(adapter);
@@ -60,29 +72,26 @@ public class ListActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new LocalMusicListAdapter.OnItemClickListener() {
             @Override
             public void OnItemClick(View view, int position) {
-                if(curposition!=-1&&curmusic!=null){
-                    //当前播放对象停止播放音乐  curposition=-1而注意curmusic没有为空的情况 在考虑
-                    curmusic.musihandler.stopplay();
-                    curposition=-1;
-                    curmusic=null;
-                }else {
+                try {
                     curposition = position;
-                    curmusic = mDatas.get(position);
-                    curmusic.musicHandler.startplay();//开始播放音乐
-                    ListDirectory.setPosition(curposition);//往交换区放入播放位置
+                    MusicControler.playTarget(curposition);
+                } catch (MusicPlayException e) {
+                    MyToast(e.getMessage());
+                }
+//                    curmusic = mDatas.get(position);
+//                    curmusic.musicHandler.startplay();//开始播放当前选择的音乐
                     Intent intent=new Intent(ListActivity.this,PlayActivity.class);//跳转
                     startActivity(intent);
-                }
             }
         });//调用传递过来的接口
 
     }
-
-    private void initView(){
-        /*初始化控件的函数*/
-        musicRv.findViewById(R.id.local_music_rv);
-
-
+    public void initBass(){
+        try {
+            (new LoadMusicImpl()).initControler();
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -105,4 +114,8 @@ public class ListActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+    public void MyToast(String error){
+        Toast.makeText(getApplicationContext(),error,Toast.LENGTH_SHORT).show();
+    }
+
 }
