@@ -29,11 +29,11 @@ public class LoadMusicImpl implements LoadMusic {
             if(!tag.isEmpty()) {
                 Artwork artwork = tag.getFirstArtwork();
                 if (artwork != null) info.setImage(BitmapFactory.decodeByteArray(artwork.getBinaryData(), 0, artwork.getBinaryData().length));
-                if(tag.getFirst(FieldKey.TITLE)!=null||tag.getFirst(FieldKey.TITLE).equals(""))info.setSongName(tag.getFirst(FieldKey.TITLE));
-                else info.setSongName(file.getName());
-                if(tag.getFirst(FieldKey.ARTIST)==null||tag.getFirst(FieldKey.ARTIST).equals(""))info.setAuthor(tag.getFirst(FieldKey.ARTIST));
+                if(!(tag.getFirst(FieldKey.TITLE)==null||tag.getFirst(FieldKey.TITLE).equals("")))info.setSongName(tag.getFirst(FieldKey.TITLE));
+                else info.setSongName(getFileName(file.getName()));
+                if(!(tag.getFirst(FieldKey.ARTIST)==null||tag.getFirst(FieldKey.ARTIST).equals("")))info.setAuthor(tag.getFirst(FieldKey.ARTIST));
                 else info.setAuthor("未知艺术家");
-                if(tag.getFirst(FieldKey.ALBUM)!=null||tag.getFirst(FieldKey.ALBUM).equals(""))info.setAlbum(tag.getFirst(FieldKey.ALBUM));
+                if(!(tag.getFirst(FieldKey.ALBUM)==null||tag.getFirst(FieldKey.ALBUM).equals("")))info.setAlbum(tag.getFirst(FieldKey.ALBUM));
                 else info.setAuthor("未知专辑");
             }
             info.setLength(header.getTrackLength());
@@ -42,6 +42,18 @@ public class LoadMusicImpl implements LoadMusic {
             throw new MusicPlayException("加载音乐文件失败",e);
         }
         return music;
+    }
+
+    private String getFileName(String rawName)
+    {
+        String resStr="";
+        String[] temp=rawName.split(".");
+        if(temp.length>2)
+        {
+            for(int i=0;i<temp.length-1;i++)resStr+=temp[i];
+        }
+        else resStr=temp[0];
+        return resStr;
     }
 
     @Override

@@ -1,8 +1,9 @@
 package com.example.musicplay.models;
 
 import java.io.File;
+import java.io.Serializable;
 
-public class Music {
+public class Music implements Serializable {
     private int musicHandler;
     private MusicInfo musicInfo;
     private File musicFile;

@@ -1,13 +1,16 @@
 package com.example.musicplay;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
 import com.example.musicplay.control.MusicControler;
 import com.example.musicplay.control.MusicPlayException;
+import com.example.musicplay.control.ToolCase;
 import com.example.musicplay.control.load_music.LoadMusicImpl;
+import com.example.musicplay.control.music_control.PlayToEnd;
 import com.example.musicplay.data.MusicCursor;
 import com.example.musicplay.data.MusicListData;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -15,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,6 +26,9 @@ import android.os.Environment;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.musicplay.models.*;
@@ -42,11 +49,14 @@ public class ListActivity extends AppCompatActivity {
     //记录当前正在播放的位置
     int curposition=-1;
     List<File> fileList;
+    private Context context;
+    private LocalBroadcastManager localBroadcastManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.context=this;
         Toolbar toolbar = findViewById(R.id.toolbar);
         musicRv=findViewById(R.id.local_music_rv);
         setSupportActionBar(toolbar);
@@ -81,16 +91,33 @@ public class ListActivity extends AppCompatActivity {
         if(fileList==null)fileList=new ArrayList<>();
         else if(fileList.size()>0)fileList.clear();
         List<Music> musicList=new ArrayList<>();
-        try {
-            List<File> files=getFileList(scanPath);
-            for(File file :files)
-            {
-                musicList.add((new LoadMusicImpl()).musicFactory(file));
-            }
-        } catch (MusicPlayException e) {
-            MyToast(e.getMessage());
+        List<File> files=getFileList(scanPath);
+        for(File file :files)
+        {
+            Object[] box=checkMusic(file);
+            boolean isAvailable=(boolean)box[0];
+            Music music=(Music)box[1];
+            if(isAvailable)musicList.add(music);
+            else continue;
         }
         return musicList;
+    }
+
+    private Object[] checkMusic(File file)
+    {
+        Object[] box=new Object[2];
+        boolean isAvailable=true;
+        Music music=null;
+        try {
+            music=(new LoadMusicImpl()).musicFactory(file);
+        }
+        catch (MusicPlayException e)
+        {
+            isAvailable=false;
+        }
+        box[0]=isAvailable;
+        box[1]=music;
+        return box;
     }
 
     private List<File> getFileList(File dir) {
@@ -101,7 +128,6 @@ public class ListActivity extends AppCompatActivity {
                 if (files[i].isDirectory()) { // 判断是文件还是文件夹
                     getFileList(files[i]); // 获取文件绝对路径
                 } else if (fileName.endsWith("mp3")||fileName.endsWith("flac")||fileName.endsWith("wav")) { // 判断文件是否是音乐
-                    String strFileName = files[i].getAbsolutePath();
                     fileList.add(files[i]);
                 } else {
                     continue;
@@ -123,10 +149,39 @@ public class ListActivity extends AppCompatActivity {
                 } catch (MusicPlayException e) {
                     MyToast(e.getMessage());
                 }
+                MusicControler.setCallBack(new PlayToEnd() {
+                    @Override
+                    public void playToEndFunc() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+//                                TextView songName=findViewById(R.id.play_local_music_song_name);
+//                                TextView singer=findViewById(R.id.play_local_music_singer);
+//                                TextView firstTime=findViewById(R.id.play_local_music_firstTime);
+//                                TextView lastTime=findViewById(R.id.play_local_music_lastTime);
+//                                ImageView album=findViewById(R.id.play_local_music_album_picture);
+//                                ProgressBar songProgressBar=findViewById(R.id.play_local_music_song_seekBar);
+//
+//                                songName.setText(MusicListData.getMusicList().getMusic().getMusicInfo().getSongName());
+//                                singer.setText(MusicListData.getMusicList().getMusic().getMusicInfo().getAuthor());
+//                                album.setImageBitmap(MusicListData.getMusicList().getMusic().getMusicInfo().getImage());//得到当前专辑图片
+//                                firstTime.setText(ToolCase.parseSecToTimeStr(0));//设置当前播放时间
+//                                lastTime.setText(ToolCase.parseSecToTimeStr(MusicListData.getMusicList().getMusic().getMusicInfo().getLength()));//设置音乐总共时长
+//                                songProgressBar.setMax(MusicListData.getMusicList().getMusic().getMusicInfo().getLength());
+
+                                localBroadcastManager=LocalBroadcastManager.getInstance(context);
+                                Intent intent=new Intent("playend");
+                                localBroadcastManager.sendBroadcast(intent);
+
+                            }
+                        });
+                    }
+                });
 //                    curmusic = mDatas.get(position);
 //                    curmusic.musicHandler.startplay();//开始播放当前选择的音乐
                     Intent intent=new Intent(ListActivity.this,PlayActivity.class);//跳转
                     startActivity(intent);
+
             }
         });//调用传递过来的接口
 
@@ -163,4 +218,8 @@ public class ListActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(),error,Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 }

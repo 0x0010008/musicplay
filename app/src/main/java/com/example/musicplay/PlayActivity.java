@@ -1,8 +1,12 @@
 package com.example.musicplay;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -27,32 +31,53 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     TextView songName,singer,firstTime,lastTime;
     ImageView album,before,start,next,listBack,repeatMode;
     SeekBar songProgressBar;
+    private int SynHandler;
     private boolean isSeekBarChanging;//互斥变量，防止进度条与定时器冲突。
     private int pauseposition=0;//当前音乐播放的进度
     private Timer timer;
     private int curposition;//现在在正在播放时间的位置
-    private Music curmusic;//现在正在播放的对象
+    //private Music curmusic;//现在正在播放的对象
     private MusicStatue curStatue;//记录歌曲现在的播放情况
+    private LocalBroadcastManager localBroadcastManager;
+    private IntentFilter intentFilter;
+    private BroadcastReceiver receiver;
 //    private LoopStatue curLoopStatue;//记录当前循环状态
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+        localBroadcastManager=LocalBroadcastManager.getInstance(this);
+        receiver=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                loadMusic();
+            }
+        };
+        intentFilter =new IntentFilter();
+        intentFilter.addAction("playend");
+        localBroadcastManager.registerReceiver(receiver,intentFilter);
         initView();//初始化
-        curmusic=MusicListData.getMusicList().getMusic();
+        //curmusic=MusicListData.getMusicList().getMusic();
+        try {
+            //curmusic=MusicListData.getMusicList().getMusic();
+            if(false)curposition=Integer.parseInt(ToolCase.parseSecToTimeStr((int)MusicControler.getNowPos()));//得到当前播放的时间位置
+            curposition=0;
+        } catch (MusicPlayException e) {
+            MyToast(e.getMessage());
+        }
         loadMusic();//加载页面
 
     }
     /*得到对象和当前播放时间后加载页面*/
     private void loadMusic() {
 
-        songName.setText(curmusic.getMusicInfo().getSongName());
-        singer.setText(curmusic.getMusicInfo().getAuthor());
-        album.setImageBitmap(curmusic.getMusicInfo().getImage());//得到当前专辑图片
+        songName.setText(MusicListData.getMusicList().getMusic().getMusicInfo().getSongName());
+        singer.setText(MusicListData.getMusicList().getMusic().getMusicInfo().getAuthor());
+        album.setImageBitmap(MusicListData.getMusicList().getMusic().getMusicInfo().getImage());//得到当前专辑图片
         firstTime.setText(ToolCase.parseSecToTimeStr(curposition));//设置当前播放时间
-        lastTime.setText(ToolCase.parseSecToTimeStr(curmusic.getMusicInfo().getLength()));//设置音乐总共时长
-        songProgressBar.setMax(curmusic.getMusicInfo().getLength());
+        lastTime.setText(ToolCase.parseSecToTimeStr(MusicListData.getMusicList().getMusic().getMusicInfo().getLength()));//设置音乐总共时长
+        songProgressBar.setMax(MusicListData.getMusicList().getMusic().getMusicInfo().getLength());
         StartProgress();
     }
 
@@ -148,6 +173,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 pauseposition=curposition;
                 timer.cancel();
                 start.setImageResource(R.drawable.ic_action_start);
+                //进度条和firstTime的变化
             } catch (MusicPlayException e) {
                 MyToast(e.getMessage());
             }
@@ -156,6 +182,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 MusicControler.play();
                 StartProgress();
                 start.setImageResource(R.drawable.ic_action_pause);
+                //进度条和first的变化
             } catch (MusicPlayException e) {
                 MyToast(e.getMessage());
             }
@@ -168,7 +195,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 timer.cancel();
             }
             MusicControler.playPrevious();
-            curmusic=MusicListData.getMusicList().getMusic();
+            //curmusic=MusicListData.getMusicList().getMusic();
             loadMusic();
             StartProgress();
         } catch (MusicPlayException e) {
@@ -182,7 +209,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
                 timer.cancel();
             }
             MusicControler.playNext();
-            curmusic=MusicListData.getMusicList().getMusic();
+            //curmusic=MusicListData.getMusicList().getMusic();
             loadMusic();
             StartProgress();
         } catch (MusicPlayException e) {
@@ -192,6 +219,13 @@ public class PlayActivity extends AppCompatActivity implements View.OnClickListe
     private void ListBack(){
         Intent intent=new Intent(PlayActivity.this,ListActivity.class);
         startActivity(intent);
+        this.finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        localBroadcastManager.unregisterReceiver(receiver);
     }
     private void StartProgress(){
         timer = new Timer();
